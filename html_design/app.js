@@ -23,13 +23,16 @@ function meetingCostApp() {
         showCurrencySettings: false,
         isLoading: false,
         
-        // Voice input
-        isListening: false,
+        // Audio recording
+        isRecording: false,
+        isProcessingAudio: false,
+        isProcessingText: false,
+        mediaRecorder: null,
+        audioChunks: [],
         transcript: '',
         voiceError: '',
-        speechSupported: false,
-        recognition: null,
-        isProcessingAPI: false,
+        audioSupported: false,
+        processingStep: '',
         
         // Currency options
         commonCurrencies: [
@@ -51,7 +54,7 @@ function meetingCostApp() {
         // Initialize
         init() {
             this.loadFromStorage();
-            this.initSpeechRecognition();
+            this.initAudioRecording();
             this.startPerformanceTimer();
             
             // Add keyboard shortcuts
@@ -190,77 +193,154 @@ function meetingCostApp() {
             }
         },
 
-        // Enhanced Speech Recognition
-        initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                this.speechSupported = true;
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                this.recognition = new SpeechRecognition();
+        // Audio Recording Setup
+        async initAudioRecording() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    this.audioSupported = true;
+                } else {
+                    this.audioSupported = false;
+                    console.warn('Audio recording not supported in this browser');
+                }
+            } catch (error) {
+                console.error('Error checking audio support:', error);
+                this.audioSupported = false;
+            }
+        },
+
+        // Start audio recording
+        async startRecording() {
+            if (!this.audioSupported) {
+                this.showNotification('Audio recording not supported in this browser', 'error');
+                return;
+            }
+
+            try {
+                this.processingStep = 'Requesting microphone access...';
+                this.voiceError = '';
                 
-                this.recognition.continuous = false;
-                this.recognition.interimResults = false;
-                this.recognition.lang = 'en-US';
-                this.recognition.maxAlternatives = 1;
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        sampleRate: 16000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    } 
+                });
+                
+                this.audioChunks = [];
+                this.mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
 
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    this.voiceError = '';
-                    this.transcript = '';
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.audioChunks.push(event.data);
+                    }
                 };
 
-                this.recognition.onresult = (event) => {
-                    const result = event.results[0][0];
-                    this.transcript = result.transcript;
-                    this.processVoiceInputWithAPI(this.transcript);
+                this.mediaRecorder.onstop = () => {
+                    this.processAudioRecording();
+                    // Stop all tracks to release microphone
+                    stream.getTracks().forEach(track => track.stop());
                 };
 
-                this.recognition.onerror = (event) => {
-                    this.voiceError = this.getVoiceErrorMessage(event.error);
-                    this.isListening = false;
-                    this.isProcessingAPI = false;
-                };
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                this.processingStep = 'Recording... Click stop when finished';
+                this.showNotification('Recording started. Speak clearly about attendee salaries.', 'info');
 
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                };
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                this.voiceError = 'Failed to access microphone. Please check permissions.';
+                this.showNotification('Failed to access microphone', 'error');
+                this.processingStep = '';
             }
         },
 
-        getVoiceErrorMessage(error) {
-            const errorMessages = {
-                'no-speech': 'No speech detected. Please try again.',
-                'audio-capture': 'Microphone not available.',
-                'not-allowed': 'Microphone access denied.',
-                'network': 'Network error occurred.',
-                'service-not-allowed': 'Speech service not allowed.'
-            };
-            return errorMessages[error] || `Speech recognition error: ${error}`;
+        // Stop audio recording
+        stopRecording() {
+            if (this.mediaRecorder && this.isRecording) {
+                this.mediaRecorder.stop();
+                this.isRecording = false;
+                this.processingStep = 'Processing audio...';
+            }
         },
 
-        toggleVoiceInput() {
-            if (this.isListening) {
-                this.recognition.stop();
+        // Toggle recording
+        toggleRecording() {
+            if (this.isRecording) {
+                this.stopRecording();
             } else {
-                this.recognition.start();
+                this.startRecording();
             }
         },
 
-        // API-based voice processing
-        async processVoiceInputWithAPI(transcript) {
-            if (!transcript || transcript.trim() === '') {
+        // Process recorded audio
+        async processAudioRecording() {
+            if (this.audioChunks.length === 0) {
+                this.showNotification('No audio recorded', 'warning');
+                this.processingStep = '';
+                return;
+            }
+
+            this.isProcessingAudio = true;
+            this.processingStep = 'Converting audio to text...';
+
+            try {
+                // Create audio blob
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                
+                // Convert to MP3 if possible, otherwise send as webm
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                // Send to speech-to-text API
+                const speechResponse = await fetch('https://worker.amarecom.com/api/speech-to-text', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!speechResponse.ok) {
+                    throw new Error(`Speech-to-text API failed: ${speechResponse.status} ${speechResponse.statusText}`);
+                }
+
+                const speechData = await speechResponse.json();
+                
+                if (!speechData.text || speechData.text.trim() === '') {
+                    throw new Error('No text was extracted from the audio');
+                }
+
+                this.transcript = speechData.text;
+                this.processingStep = 'Extracting attendee information...';
+                
+                // Process the text to extract attendees
+                await this.processTextForAttendees(speechData.text);
+
+            } catch (error) {
+                console.error('Audio processing error:', error);
+                this.voiceError = `Failed to process audio: ${error.message}`;
+                this.showNotification('Failed to process audio. Please try again.', 'error');
+            } finally {
+                this.isProcessingAudio = false;
+                this.processingStep = '';
+            }
+        },
+
+        // Process text to extract attendees
+        async processTextForAttendees(text) {
+            if (!text || text.trim() === '') {
                 this.showNotification('No text to process', 'warning');
                 return;
             }
 
-            this.isProcessingAPI = true;
-            this.voiceError = '';
+            this.isProcessingText = true;
+            this.processingStep = 'Analyzing text for attendee data...';
 
             try {
-                // Encode the transcript for URL
-                const encodedText = encodeURIComponent(transcript.trim());
+                // Encode the text for URL
+                const encodedText = encodeURIComponent(text.trim());
                 const apiUrl = `https://worker.amarecom.com/api/get-attendees-from-text?text=${encodedText}`;
-                
-                this.showNotification('Processing voice input...', 'info');
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -271,7 +351,7 @@ function meetingCostApp() {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                    throw new Error(`Attendees API failed: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
@@ -279,75 +359,31 @@ function meetingCostApp() {
                 // Process the API response
                 if (data && Array.isArray(data) && data.length > 0) {
                     // Add attendees from API response
+                    let addedCount = 0;
                     data.forEach(attendeeData => {
                         if (attendeeData.salary && attendeeData.salary > 0) {
                             this.addAttendeeWithSalary(attendeeData.salary);
+                            addedCount++;
                         }
                     });
                     
-                    this.saveToStorage();
-                    this.showNotification(`Added ${data.length} attendee(s) from voice input`, 'success');
+                    if (addedCount > 0) {
+                        this.saveToStorage();
+                        this.showNotification(`Successfully added ${addedCount} attendee(s) from voice input!`, 'success');
+                    } else {
+                        this.showNotification('No valid salary information found in the audio.', 'warning');
+                    }
                 } else {
-                    this.showNotification('No valid attendees found in the text. Try mentioning specific salary amounts.', 'warning');
+                    this.showNotification('No attendee information found. Try mentioning specific salary amounts.', 'warning');
                 }
 
             } catch (error) {
-                console.error('API processing error:', error);
-                this.voiceError = `Failed to process voice input: ${error.message}`;
-                this.showNotification('Failed to process voice input. Please try again.', 'error');
-                
-                // Fallback to local processing if API fails
-                this.processVoiceInputLocal(transcript);
+                console.error('Text processing error:', error);
+                this.voiceError = `Failed to extract attendees: ${error.message}`;
+                this.showNotification('Failed to extract attendee information. Please try again.', 'error');
             } finally {
-                this.isProcessingAPI = false;
-            }
-        },
-
-        // Fallback local processing (original method)
-        processVoiceInputLocal(transcript) {
-            const text = transcript.toLowerCase();
-            
-            // Multiple patterns for salary extraction
-            const patterns = [
-                /(\d{4,7})/g, // Basic 4-7 digit numbers
-                /(\d{1,3}(?:,\d{3})*)/g, // Numbers with commas
-                /(\d+)\s*(?:thousand|k)/gi, // "50 thousand" or "50k"
-                /(\d+)\s*(?:million|m)/gi // "1 million" or "1m"
-            ];
-            
-            const salaries = new Set(); // Use Set to avoid duplicates
-            
-            patterns.forEach(pattern => {
-                const matches = text.match(pattern);
-                if (matches) {
-                    matches.forEach(match => {
-                        let salary = parseInt(match.replace(/[,\s]/g, ''), 10);
-                        
-                        // Handle thousands and millions
-                        if (text.includes('thousand') || text.includes('k')) {
-                            salary *= 1000;
-                        } else if (text.includes('million') || text.includes('m')) {
-                            salary *= 1000000;
-                        }
-                        
-                        // Filter reasonable salary ranges
-                        if (salary >= 10000 && salary <= 10000000) {
-                            salaries.add(salary);
-                        }
-                    });
-                }
-            });
-            
-            // Add attendees for each unique salary found
-            Array.from(salaries).forEach(salary => {
-                this.addAttendeeWithSalary(salary);
-            });
-            
-            if (salaries.size > 0) {
-                this.saveToStorage();
-                this.showNotification(`Added ${salaries.size} attendee(s) (local processing)`, 'success');
-            } else {
-                this.showNotification('No valid salaries detected. Try saying specific amounts.', 'warning');
+                this.isProcessingText = false;
+                this.processingStep = '';
             }
         },
 
@@ -507,7 +543,10 @@ function meetingCostApp() {
             this.showCurrencySettings = false;
             this.customSymbol = '';
             this.customCode = '';
-            this.isProcessingAPI = false;
+            this.isRecording = false;
+            this.isProcessingAudio = false;
+            this.isProcessingText = false;
+            this.processingStep = '';
             
             // Clear all localStorage versions
             localStorage.removeItem('meeting-cost-app');
@@ -590,13 +629,20 @@ function meetingCostApp() {
         },
 
         get voiceInputText() {
-            if (this.isProcessingAPI) {
-                return 'Processing with AI... Please wait.';
+            if (this.processingStep) {
+                return this.processingStep;
             }
-            if (this.isListening) {
-                return 'Listening... Speak clearly and mention salary amounts.';
+            if (this.isRecording) {
+                return 'Recording... Click stop when finished speaking.';
             }
-            return 'Click the microphone to add attendees by voice. Try: "Add three people with salaries 80k, 120k, and 150k"';
+            if (this.isProcessingAudio || this.isProcessingText) {
+                return 'Processing your audio...';
+            }
+            return 'Click the microphone to record voice input. Mention attendee salaries clearly.';
+        },
+
+        get isProcessingVoice() {
+            return this.isProcessingAudio || this.isProcessingText;
         },
 
         get averageSalary() {
