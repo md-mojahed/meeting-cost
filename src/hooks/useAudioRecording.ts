@@ -198,7 +198,7 @@ export function useAudioRecording(onAttendeesExtracted: (attendees: any[]) => vo
 
     try {
       // Encode the text for URL
-      const encodedText = encodeURIComponent(text.trim());
+      const encodedText = encodeURIComponent(text.trim().toLowerCase().replaceAll('.', ''));
       const apiUrl = `https://worker.amarecom.com/api/get-attendees-from-text?text=${encodedText}`;
       
       const response = await fetch(apiUrl, {
