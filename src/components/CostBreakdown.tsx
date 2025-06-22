@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Users } from 'lucide-react';
+import { TrendingUp, Users, User } from 'lucide-react';
 import { Attendee, WorkingHours, MeetingState, CurrencySettings } from '../types';
 import { calculateMinuteRate, formatCurrency, formatTime } from '../utils/calculations';
 
