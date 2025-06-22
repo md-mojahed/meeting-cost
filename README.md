@@ -1,6 +1,6 @@
-# Meeting Cost Calculator - Executive Edition (HTML/Alpine.js)
+# Meeting Cost - Executive Edition
 
-A premium, VIP-style meeting cost calculator built with vanilla HTML, CSS, and Alpine.js. This executive edition features enhanced UX, performance optimizations, currency customization, and a sophisticated design suitable for C-level executives and business professionals.
+A premium, VIP-style meeting cost calculator built with react. This executive edition features enhanced UX, performance optimizations, currency customization, and a sophisticated design suitable for C-level executives and business professionals.
 
 ## 🌟 Premium Features
 
@@ -280,4 +280,4 @@ For technical support or feature requests, please refer to the documentation or 
 
 ---
 
-**Meeting Cost Calculator Executive Edition v3** - Transforming meeting efficiency through intelligent cost tracking with global currency support.
+**Meeting Cost Executive Edition v3** - Transforming meeting efficiency through intelligent cost tracking with global currency support.
