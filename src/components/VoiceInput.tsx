@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Mic, MicOff } from 'lucide-react';
-import { useSpeechToText } from '../hooks/useSpeechToText';
-import { parseSpeechToAttendees } from '../utils/calculations';
+import React from 'react';
+import { Mic, Square, AlertTriangle } from 'lucide-react';
+import { useAudioRecording } from '../hooks/useAudioRecording';
 import { Attendee } from '../types';
 
 interface VoiceInputProps {
@@ -9,22 +8,31 @@ interface VoiceInputProps {
 }
 
 export function VoiceInput({ onAttendeesExtracted }: VoiceInputProps) {
-  const { transcript, isListening, error, startListening, stopListening } = useSpeechToText();
-  const [lastProcessedTranscript, setLastProcessedTranscript] = useState('');
+  const handleAttendeesExtracted = (apiAttendees: any[]) => {
+    const attendees: Attendee[] = apiAttendees.map((attendeeData, index) => ({
+      id: index + 1, // This will be updated by the parent component
+      salary: attendeeData.salary
+    }));
+    onAttendeesExtracted(attendees);
+  };
 
-  useEffect(() => {
-    if (transcript && transcript !== lastProcessedTranscript) {
-      const attendees = parseSpeechToAttendees(transcript);
-      if (attendees.length > 0) {
-        onAttendeesExtracted(attendees);
-        setLastProcessedTranscript(transcript);
-      }
-    }
-  }, [transcript, onAttendeesExtracted, lastProcessedTranscript]);
+  const {
+    isRecording,
+    isProcessingAudio,
+    isProcessingText,
+    transcript,
+    error,
+    processingStep,
+    audioSupported,
+    toggleRecording
+  } = useAudioRecording(handleAttendeesExtracted);
 
-  const voiceInputText = isListening
-    ? 'Listening... Speak clearly and mention salary amounts.'
-    : 'Click the microphone to add attendees by voice. Try: "Add three people with salaries 80k, 120k, and 150k"';
+  const isProcessingVoice = isProcessingAudio || isProcessingText;
+
+  const voiceInputText = processingStep || 
+    (isRecording ? 'Recording... Click stop when finished speaking.' : 
+     isProcessingVoice ? 'Processing your audio...' : 
+     'Click the microphone to record voice input. Mention attendee salaries clearly.');
 
   return (
     <div className="bg-gradient-to-br from-purple-500 via-blue-600 to-teal-500 rounded-3xl p-1 shadow-2xl">
@@ -36,20 +44,29 @@ export function VoiceInput({ onAttendeesExtracted }: VoiceInputProps) {
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900">AI Voice Assistant</h3>
-              <p className="text-sm text-gray-500">Speak naturally to add attendees</p>
+              <p className="text-sm text-gray-500">Record audio to add attendees</p>
             </div>
           </div>
-          <button
-            onClick={isListening ? stopListening : startListening}
-            disabled={!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)}
-            className={`p-4 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none ${
-              isListening 
-                ? 'bg-red-500 hover:bg-red-600 scale-110' 
-                : 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400'
-            }`}
-          >
-            {isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Processing indicators */}
+            {isProcessingVoice && (
+              <div className="flex items-center space-x-2 px-3 py-2 bg-blue-100 rounded-lg">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm text-blue-600 font-medium">Processing</span>
+              </div>
+            )}
+            <button
+              onClick={toggleRecording}
+              disabled={!audioSupported || isProcessingVoice}
+              className={`p-4 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none ${
+                isRecording 
+                  ? 'bg-red-500 hover:bg-red-600 scale-110' 
+                  : 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400'
+              }`}
+            >
+              {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
         
         <div className="space-y-4">
@@ -66,7 +83,16 @@ export function VoiceInput({ onAttendeesExtracted }: VoiceInputProps) {
           {transcript && (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
               <p className="text-sm text-green-800">
-                <span className="font-semibold">Recognized:</span> "{transcript}"
+                <span className="font-semibold">Transcribed:</span> "{transcript}"
+              </p>
+            </div>
+          )}
+
+          {!audioSupported && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+              <p className="text-sm text-yellow-800 flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Audio recording not supported in this browser
               </p>
             </div>
           )}
