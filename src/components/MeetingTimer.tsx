@@ -24,68 +24,68 @@ export function MeetingTimer({ meeting, attendees, workingHours, currency, onSta
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-200/50 p-8">
-      <div className="flex items-center space-x-3 mb-8">
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-2xl">
-          <Clock className="h-6 w-6 text-white" />
+    <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/50 p-4 sm:p-8">
+      <div className="flex items-center space-x-3 mb-6 sm:mb-8">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 sm:p-3 rounded-xl sm:rounded-2xl">
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Meeting Timer</h2>
-          <p className="text-sm text-gray-500">Track your meeting costs in real-time</p>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Meeting Timer</h2>
+          <p className="text-xs sm:text-sm text-gray-500">Track your meeting costs in real-time</p>
         </div>
       </div>
       
-      <div className="text-center mb-8">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-3xl p-8 mb-6">
-          <div className="text-5xl font-bold text-white mb-2 font-mono tracking-wider">
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-700 rounded-2xl sm:rounded-3xl p-4 sm:p-8 mb-4 sm:mb-6">
+          <div className="text-3xl sm:text-5xl font-bold text-white mb-1 sm:mb-2 font-mono tracking-wider">
             {formatTime(meeting.duration)}
           </div>
-          <div className="text-gray-300 text-sm font-medium">ELAPSED TIME</div>
+          <div className="text-gray-300 text-xs sm:text-sm font-medium">ELAPSED TIME</div>
         </div>
         {currentCost > 0 && (
-          <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl p-6 border border-red-200">
-            <div className="text-3xl font-bold text-red-600 mb-1">
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-red-200">
+            <div className="text-2xl sm:text-3xl font-bold text-red-600 mb-1">
               {formatCurrency(currentCost, currency)}
             </div>
-            <div className="text-red-500 text-sm font-medium">TOTAL COST</div>
+            <div className="text-red-500 text-xs sm:text-sm font-medium">TOTAL COST</div>
           </div>
         )}
       </div>
       
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-3 sm:space-y-4">
         {!meeting.isRunning ? (
           <button
             onClick={onStart}
             disabled={!hasAttendees}
-            className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
+            className="flex items-center justify-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none text-sm sm:text-base"
           >
-            <Play className="h-5 w-5" />
+            <Play className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Start Meeting</span>
           </button>
         ) : (
           <button
             onClick={onEnd}
-            className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex items-center justify-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
           >
-            <Square className="h-5 w-5" />
+            <Square className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>End Meeting</span>
           </button>
         )}
         
         <button
           onClick={handleReset}
-          className="flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          className="flex items-center justify-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
         >
-          <RotateCcw className="h-5 w-5" />
+          <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>Reset All</span>
         </button>
       </div>
       
       {!hasAttendees && (
-        <div className="text-center text-sm text-gray-500 mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+        <div className="text-center text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6 p-3 sm:p-4 bg-yellow-50 rounded-lg sm:rounded-xl border border-yellow-200">
           <div className="flex items-center justify-center mb-2">
             <div className="bg-yellow-100 p-2 rounded-lg">
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
             </div>
           </div>
           Add attendees with salaries to start the meeting timer

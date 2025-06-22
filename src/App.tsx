@@ -127,10 +127,23 @@ function App() {
         currency={appState.currency}
       />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Column - Configuration */}
-          <div className="xl:col-span-2 space-y-8">
+          <div className="xl:col-span-2 space-y-4 sm:space-y-8">
+            {/* Mobile-First Timer - Show on mobile at top */}
+            <div className="xl:hidden">
+              <MeetingTimer
+                meeting={meeting}
+                attendees={appState.attendees}
+                workingHours={appState.workingHours}
+                currency={appState.currency}
+                onStart={startMeeting}
+                onEnd={endMeeting}
+                onReset={resetAll}
+              />
+            </div>
+
             <WorkingHoursCard
               workingHours={appState.workingHours}
               onUpdate={updateWorkingHours}
@@ -143,49 +156,53 @@ function App() {
             
             <VoiceInput onAttendeesExtracted={handleVoiceAttendees} />
             
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-200/50 p-8">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/50 p-4 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-gradient-to-br from-blue-500 to-teal-500 p-3 rounded-2xl">
-                    <Plus className="h-6 w-6 text-white" />
+                  <div className="bg-gradient-to-br from-blue-500 to-teal-500 p-2 sm:p-3 rounded-xl sm:rounded-2xl">
+                    <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold text-gray-900">Meeting Attendees</h2>
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Meeting Attendees</h2>
                     <p className="text-sm text-gray-500">Add team members and their compensation</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                
+                {/* Mobile Action Buttons */}
+                <div className="flex items-center justify-end space-x-2 sm:space-x-3">
                   {appState.attendees.length > 0 && (
                     <button
                       onClick={deleteAllAttendees}
-                      className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
                     >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Delete All</span>
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Delete All</span>
+                      <span className="sm:hidden">Clear</span>
                     </button>
                   )}
                   <button
                     onClick={addAttendee}
-                    className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="flex items-center space-x-1 sm:space-x-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base"
                   >
-                    <Plus className="h-5 w-5" />
-                    <span>Add Attendee</span>
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Add Attendee</span>
+                    <span className="sm:hidden">Add</span>
                   </button>
                 </div>
               </div>
               
               {appState.attendees.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                    <Plus className="h-12 w-12 text-gray-400" />
+                <div className="text-center py-8 sm:py-12">
+                  <div className="bg-gray-100 rounded-full p-4 sm:p-6 w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 flex items-center justify-center">
+                    <Plus className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                   </div>
-                  <p className="text-xl text-gray-500 mb-2">No attendees added yet</p>
+                  <p className="text-lg sm:text-xl text-gray-500 mb-2">No attendees added yet</p>
                   <p className="text-sm text-gray-400">
                     Add attendees manually or use the AI voice assistant to get started
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
                   {appState.attendees.map(attendee => (
                     <AttendeeCard
                       key={attendee.id}
@@ -201,8 +218,8 @@ function App() {
             </div>
           </div>
           
-          {/* Right Column - Timer and Results */}
-          <div className="space-y-8">
+          {/* Right Column - Timer and Results (Desktop Only) */}
+          <div className="hidden xl:block space-y-8">
             <MeetingTimer
               meeting={meeting}
               attendees={appState.attendees}
@@ -213,6 +230,16 @@ function App() {
               onReset={resetAll}
             />
             
+            <CostBreakdown
+              attendees={appState.attendees}
+              workingHours={appState.workingHours}
+              meeting={meeting}
+              currency={appState.currency}
+            />
+          </div>
+
+          {/* Mobile Cost Breakdown */}
+          <div className="xl:hidden">
             <CostBreakdown
               attendees={appState.attendees}
               workingHours={appState.workingHours}
