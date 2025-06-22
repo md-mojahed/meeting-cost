@@ -27,7 +27,7 @@
                         </div>
                         <div>
                             <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
-                                Meeting Cost Calculator
+                                Meeting Cost
                             </h1>
                             <p class="text-sm text-gray-500 font-medium">Executive Edition</p>
                         </div>
@@ -341,13 +341,23 @@
                                     <p class="text-sm text-gray-500">Add team members and their compensation</p>
                                 </div>
                             </div>
-                            <button
-                                @click="addAttendee()"
-                                class="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                            >
-                                <i data-lucide="plus" class="h-5 w-5"></i>
-                                <span>Add Attendee</span>
-                            </button>
+                            <div class="flex items-center space-x-3">
+                                <button
+                                    x-show="attendees.length > 0"
+                                    @click="deleteAllAttendees()"
+                                    class="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                >
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                    <span>Delete All</span>
+                                </button>
+                                <button
+                                    @click="addAttendee()"
+                                    class="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                >
+                                    <i data-lucide="plus" class="h-5 w-5"></i>
+                                    <span>Add Attendee</span>
+                                </button>
+                            </div>
                         </div>
                         
                         <div x-show="attendees.length === 0" class="text-center py-12">
@@ -532,6 +542,34 @@
                 </div>
             </div>
         </main>
+
+        <!-- Bolt.new Badge -->
+        <a
+            href="https://bolt.new/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="fixed bottom-6 right-6 z-50 group"
+            aria-label="Built with Bolt.new"
+        >
+            <div class="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2">
+                <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="text-black"
+                    >
+                        <path
+                            d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
+                            fill="currentColor"
+                        />
+                    </svg>
+                </div>
+                <span class="text-sm font-medium">Built with Bolt.new</span>
+            </div>
+        </a>
 
         <!-- Loading Overlay -->
         <div x-show="isLoading" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">

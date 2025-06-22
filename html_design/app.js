@@ -358,6 +358,15 @@ function meetingCostApp() {
             }
         },
 
+        deleteAllAttendees() {
+            if (confirm('Are you sure you want to remove all attendees? This action cannot be undone.')) {
+                this.attendees = [];
+                this.nextId = 1;
+                this.saveToStorage();
+                this.showNotification('All attendees removed', 'info');
+            }
+        },
+
         updateAttendee(id, salary) {
             const attendee = this.attendees.find(a => a.id === id);
             if (attendee) {
