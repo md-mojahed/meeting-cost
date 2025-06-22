@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { QuickStats } from './components/QuickStats';
 import { WorkingHoursCard } from './components/WorkingHoursCard';
@@ -8,6 +8,7 @@ import { AttendeeCard } from './components/AttendeeCard';
 import { VoiceInput } from './components/VoiceInput';
 import { MeetingTimer } from './components/MeetingTimer';
 import { CostBreakdown } from './components/CostBreakdown';
+import { BoltBadge } from './components/BoltBadge';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useTimer } from './hooks/useTimer';
 import { calculateMeetingCost } from './utils/calculations';
@@ -68,6 +69,16 @@ function App() {
       ...prev,
       attendees: prev.attendees.filter(a => a.id !== id),
     }));
+  };
+
+  const deleteAllAttendees = () => {
+    if (window.confirm('Are you sure you want to remove all attendees? This action cannot be undone.')) {
+      setAppState(prev => ({
+        ...prev,
+        attendees: [],
+      }));
+      setNextId(1);
+    }
   };
 
   const updateAttendeeSalary = (id: number, salary: number) => {
@@ -143,13 +154,24 @@ function App() {
                     <p className="text-sm text-gray-500">Add team members and their compensation</p>
                   </div>
                 </div>
-                <button
-                  onClick={addAttendee}
-                  className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Add Attendee</span>
-                </button>
+                <div className="flex items-center space-x-3">
+                  {appState.attendees.length > 0 && (
+                    <button
+                      onClick={deleteAllAttendees}
+                      className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete All</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={addAttendee}
+                    className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>Add Attendee</span>
+                  </button>
+                </div>
               </div>
               
               {appState.attendees.length === 0 ? (
@@ -200,6 +222,9 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* Bolt.new Badge */}
+      <BoltBadge />
     </div>
   );
 }
