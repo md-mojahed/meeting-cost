@@ -15,7 +15,7 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
-                Meeting Cost Calculator
+                Meeting Cost
               </h1>
               <p className="text-sm text-gray-500 font-medium">Executive Edition</p>
             </div>
