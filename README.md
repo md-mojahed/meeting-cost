@@ -1,6 +1,6 @@
 # Meeting Cost - Executive Edition
 
-A premium, VIP-style meeting cost calculator built with react. This executive edition features enhanced UX, performance optimizations, currency customization, and a sophisticated design suitable for C-level executives and business professionals.
+A premium, VIP-style meeting cost calculator built with reactjs, elevenlabs api, chatgpt api. This executive edition features enhanced UX, performance optimizations, currency customization, and a sophisticated design suitable for C-level executives and business professionals.
 
 ## 🌟 Premium Features
 
@@ -130,7 +130,7 @@ A premium, VIP-style meeting cost calculator built with react. This executive ed
 ### Technologies
 - **HTML5**: Semantic markup with accessibility attributes
 - **CSS3**: Modern features including Grid, Flexbox, and Custom Properties
-- **Alpine.js**: Reactive framework for dynamic behavior
+- **Reactjs**: Reactive framework for dynamic behavior
 - **Lucide Icons**: Professional icon system
 - **Inter Font**: Premium typography via Google Fonts
 
