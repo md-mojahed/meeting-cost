@@ -29,6 +29,7 @@ function meetingCostApp() {
         voiceError: '',
         speechSupported: false,
         recognition: null,
+        isProcessingAPI: false,
         
         // Currency options
         commonCurrencies: [
@@ -210,12 +211,13 @@ function meetingCostApp() {
                 this.recognition.onresult = (event) => {
                     const result = event.results[0][0];
                     this.transcript = result.transcript;
-                    this.processVoiceInput(this.transcript);
+                    this.processVoiceInputWithAPI(this.transcript);
                 };
 
                 this.recognition.onerror = (event) => {
                     this.voiceError = this.getVoiceErrorMessage(event.error);
                     this.isListening = false;
+                    this.isProcessingAPI = false;
                 };
 
                 this.recognition.onend = () => {
@@ -243,8 +245,66 @@ function meetingCostApp() {
             }
         },
 
-        // Enhanced voice processing with better pattern matching
-        processVoiceInput(transcript) {
+        // API-based voice processing
+        async processVoiceInputWithAPI(transcript) {
+            if (!transcript || transcript.trim() === '') {
+                this.showNotification('No text to process', 'warning');
+                return;
+            }
+
+            this.isProcessingAPI = true;
+            this.voiceError = '';
+
+            try {
+                // Encode the transcript for URL
+                const encodedText = encodeURIComponent(transcript.trim());
+                const apiUrl = `https://worker.amarecom.com/api/get-attendees-from-text?text=${encodedText}`;
+                
+                this.showNotification('Processing voice input...', 'info');
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Process the API response
+                if (data && Array.isArray(data) && data.length > 0) {
+                    // Add attendees from API response
+                    data.forEach(attendeeData => {
+                        if (attendeeData.salary && attendeeData.salary > 0) {
+                            this.addAttendeeWithSalary(attendeeData.salary);
+                        }
+                    });
+                    
+                    this.saveToStorage();
+                    this.showNotification(`Added ${data.length} attendee(s) from voice input`, 'success');
+                } else {
+                    this.showNotification('No valid attendees found in the text. Try mentioning specific salary amounts.', 'warning');
+                }
+
+            } catch (error) {
+                console.error('API processing error:', error);
+                this.voiceError = `Failed to process voice input: ${error.message}`;
+                this.showNotification('Failed to process voice input. Please try again.', 'error');
+                
+                // Fallback to local processing if API fails
+                this.processVoiceInputLocal(transcript);
+            } finally {
+                this.isProcessingAPI = false;
+            }
+        },
+
+        // Fallback local processing (original method)
+        processVoiceInputLocal(transcript) {
             const text = transcript.toLowerCase();
             
             // Multiple patterns for salary extraction
@@ -285,7 +345,7 @@ function meetingCostApp() {
             
             if (salaries.size > 0) {
                 this.saveToStorage();
-                this.showNotification(`Added ${salaries.size} attendee(s)`, 'success');
+                this.showNotification(`Added ${salaries.size} attendee(s) (local processing)`, 'success');
             } else {
                 this.showNotification('No valid salaries detected. Try saying specific amounts.', 'warning');
             }
@@ -447,6 +507,7 @@ function meetingCostApp() {
             this.showCurrencySettings = false;
             this.customSymbol = '';
             this.customCode = '';
+            this.isProcessingAPI = false;
             
             // Clear all localStorage versions
             localStorage.removeItem('meeting-cost-app');
@@ -529,6 +590,9 @@ function meetingCostApp() {
         },
 
         get voiceInputText() {
+            if (this.isProcessingAPI) {
+                return 'Processing with AI... Please wait.';
+            }
             if (this.isListening) {
                 return 'Listening... Speak clearly and mention salary amounts.';
             }

@@ -301,14 +301,21 @@
                                         <p class="text-sm text-gray-500">Speak naturally to add attendees</p>
                                     </div>
                                 </div>
-                                <button
-                                    @click="toggleVoiceInput()"
-                                    :disabled="!speechSupported"
-                                    :class="isListening ? 'bg-red-500 hover:bg-red-600 scale-110' : 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400'"
-                                    class="p-4 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
-                                >
-                                    <i :data-lucide="isListening ? 'mic-off' : 'mic'" class="h-6 w-6"></i>
-                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Processing indicator -->
+                                    <div x-show="isProcessingAPI" class="flex items-center space-x-2 px-3 py-2 bg-blue-100 rounded-lg">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                        <span class="text-sm text-blue-600 font-medium">Processing...</span>
+                                    </div>
+                                    <button
+                                        @click="toggleVoiceInput()"
+                                        :disabled="!speechSupported || isProcessingAPI"
+                                        :class="isListening ? 'bg-red-500 hover:bg-red-600 scale-110' : 'bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400'"
+                                        class="p-4 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:shadow-none"
+                                    >
+                                        <i :data-lucide="isListening ? 'mic-off' : 'mic'" class="h-6 w-6"></i>
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="space-y-4">
